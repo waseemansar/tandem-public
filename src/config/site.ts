@@ -19,3 +19,8 @@ export const pronouns: Pronouns = {
     possessive: process.env.NEXT_PUBLIC_OWNER_PRONOUN_POSSESSIVE || "their",
 };
 export const photo = process.env.NEXT_PUBLIC_OWNER_PHOTO || "/placeholder-avatar.png";
+
+// Optional owner social links, rendered in the visitor footer. Empty = link hidden,
+// so a fresh fork shows no personal socials until its owner sets them.
+export const linkedin = process.env.NEXT_PUBLIC_OWNER_LINKEDIN || "";
+export const github = process.env.NEXT_PUBLIC_OWNER_GITHUB || "";

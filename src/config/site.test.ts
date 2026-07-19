@@ -7,6 +7,8 @@ const OWNER_ENV_KEYS = [
     "NEXT_PUBLIC_OWNER_PRONOUN_OBJECT",
     "NEXT_PUBLIC_OWNER_PRONOUN_POSSESSIVE",
     "NEXT_PUBLIC_OWNER_PHOTO",
+    "NEXT_PUBLIC_OWNER_LINKEDIN",
+    "NEXT_PUBLIC_OWNER_GITHUB",
 ] as const;
 
 async function loadSite() {
@@ -28,6 +30,8 @@ describe("site config", () => {
         expect(site.firstName).toBe("You");
         expect(site.pronouns).toEqual({ subject: "they", object: "them", possessive: "their" });
         expect(site.photo).toBe("/placeholder-avatar.png");
+        expect(site.linkedin).toBe("");
+        expect(site.github).toBe("");
     });
 
     it("reads the represented human's identity from owner env when set", async () => {
@@ -37,6 +41,8 @@ describe("site config", () => {
         process.env.NEXT_PUBLIC_OWNER_PRONOUN_OBJECT = "her";
         process.env.NEXT_PUBLIC_OWNER_PRONOUN_POSSESSIVE = "her";
         process.env.NEXT_PUBLIC_OWNER_PHOTO = "/ada.png";
+        process.env.NEXT_PUBLIC_OWNER_LINKEDIN = "https://linkedin.com/in/ada";
+        process.env.NEXT_PUBLIC_OWNER_GITHUB = "https://github.com/ada";
 
         const site = await loadSite();
 
@@ -44,5 +50,7 @@ describe("site config", () => {
         expect(site.firstName).toBe("Ada");
         expect(site.pronouns).toEqual({ subject: "she", object: "her", possessive: "her" });
         expect(site.photo).toBe("/ada.png");
+        expect(site.linkedin).toBe("https://linkedin.com/in/ada");
+        expect(site.github).toBe("https://github.com/ada");
     });
 });
