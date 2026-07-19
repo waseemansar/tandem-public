@@ -1,0 +1,15 @@
+node_modules
+.next
+.next/**
+out
+build
+coverage
+pnpm-lock.yaml
+src/db/migrations
+design-system
+public
+.husky
+.claude
+docs/design
+*.tsbuildinfo
+next-env.d.ts
