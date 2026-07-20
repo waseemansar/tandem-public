@@ -29,7 +29,7 @@ The repo ships with a **neutral placeholder identity** — no real name or photo
 | ----------------- | --------------------------------------------------- |
 | Framework         | Next.js 16 (App Router) + React 19 (React Compiler) |
 | Language          | TypeScript 5                                        |
-| LLM orchestration | OpenAI Agents SDK + `gpt-5-mini`                    |
+| LLM orchestration | OpenAI Agents SDK + `gpt-5.6-terra`                 |
 | Database          | PostgreSQL + Drizzle ORM                            |
 | Auth              | Auth.js v5 — Credentials provider                   |
 | Styling           | Tailwind CSS v4 + shadcn/ui                         |
@@ -133,7 +133,7 @@ Next.js App Router ────────────────────�
     ├─ anti-abuse guard   layer A: conv id  ·  layer B: client IP (Postgres counters)
     │                                                            │
     ▼                                                            │
-Twin (OpenAI Agents SDK + gpt-5-mini)                            │
+Twin (OpenAI Agents SDK + gpt-5.6-terra)                         │
     │  answers from the knowledge doc                            │
     ├─ knows it        →  streams reply                          │
     └─ doesn't know    →  request_human_handoff tool             │
@@ -179,19 +179,19 @@ tests/                      # Playwright E2E
 
 All variables are documented inline in [`.env.example`](.env.example). The essentials:
 
-| Variable                                                | Purpose                                                         |
-| ------------------------------------------------------- | --------------------------------------------------------------- |
-| `DATABASE_URL`                                          | Postgres connection for the running app.                        |
-| `OPENAI_API_KEY` / `OPENAI_TWIN_MODEL`                  | Twin credentials + model (default `gpt-5-mini`). **Required.**  |
-| `AUTH_SECRET`                                           | Auth.js session secret (`openssl rand -base64 32`).             |
-| `AUTH_TRUST_HOST`                                       | `true` behind a reverse proxy (Railway, etc.).                  |
-| `NEXT_PUBLIC_OWNER_*`                                   | Represented human's name, pronouns, photo. Rebuild to apply.    |
-| `APP_BASE_URL`                                          | Public origin for notification and magic-link deep links.       |
-| `PUSHOVER_APP_TOKEN` / `PUSHOVER_USER_KEY`              | Escalation pushes. Unset = no notifications.                    |
-| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`                  | Magic-link emails. Unset = feature no-ops.                      |
-| `MAGIC_LINK_SECRET`                                     | Signs magic-link tokens (`openssl rand -base64 32`).            |
-| `RATE_LIMIT_CONVERSATION_PER_MINUTE` / `_IP_PER_MINUTE` | Anti-abuse limits (defaults 10 / 60).                           |
-| `DISABLE_TWIN`                                          | Kill switch — exactly `true` makes every reply escalation-only. |
+| Variable                                                | Purpose                                                           |
+| ------------------------------------------------------- | ----------------------------------------------------------------- |
+| `DATABASE_URL`                                          | Postgres connection for the running app.                          |
+| `OPENAI_API_KEY` / `OPENAI_TWIN_MODEL`                  | Twin credentials + model (default `gpt-5.6-terra`). **Required.** |
+| `AUTH_SECRET`                                           | Auth.js session secret (`openssl rand -base64 32`).               |
+| `AUTH_TRUST_HOST`                                       | `true` behind a reverse proxy (Railway, etc.).                    |
+| `NEXT_PUBLIC_OWNER_*`                                   | Represented human's name, pronouns, photo. Rebuild to apply.      |
+| `APP_BASE_URL`                                          | Public origin for notification and magic-link deep links.         |
+| `PUSHOVER_APP_TOKEN` / `PUSHOVER_USER_KEY`              | Escalation pushes. Unset = no notifications.                      |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`                  | Magic-link emails. Unset = feature no-ops.                        |
+| `MAGIC_LINK_SECRET`                                     | Signs magic-link tokens (`openssl rand -base64 32`).              |
+| `RATE_LIMIT_CONVERSATION_PER_MINUTE` / `_IP_PER_MINUTE` | Anti-abuse limits (defaults 10 / 60).                             |
+| `DISABLE_TWIN`                                          | Kill switch — exactly `true` makes every reply escalation-only.   |
 
 ## Operations
 

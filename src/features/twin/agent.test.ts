@@ -171,12 +171,12 @@ describe("createOpenAITwinAgent", () => {
         expect(() => createOpenAITwinAgent()).toThrow(/OPENAI_API_KEY/);
     });
 
-    it("uses gpt-5-mini by default and honors OPENAI_TWIN_MODEL when set", async () => {
+    it("uses gpt-5.6-terra by default and honors OPENAI_TWIN_MODEL when set", async () => {
         mockedRun.mockResolvedValue(makeStreamedResult([]) as never);
 
         await collect(createOpenAITwinAgent().stream({ transcript: "Visitor: hi", doc: "d" }));
         const defaultConfig = mockedAgentCtor.mock.calls[0][0] as { model: string };
-        expect(defaultConfig.model).toBe("gpt-5-mini");
+        expect(defaultConfig.model).toBe("gpt-5.6-terra");
 
         process.env.OPENAI_TWIN_MODEL = "gpt-5-nano";
         await collect(createOpenAITwinAgent().stream({ transcript: "Visitor: hi", doc: "d" }));

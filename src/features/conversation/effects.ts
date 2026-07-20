@@ -1,4 +1,4 @@
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { conversations, messages } from "@/db/schema";
 import type { Clock } from "@/shared/clock";
@@ -11,6 +11,28 @@ import { renderTranscript } from "@/features/twin/prompt";
 import { STEP_OUT_SYSTEM_MESSAGE } from "@/features/conversation/constants";
 import type { ConversationState } from "@/features/conversation/state-machine";
 import { visitorDisplayNameOrNull } from "@/features/conversation/visitor-name";
+
+// Which escalation triggered the push, so the notification title can tell a
+// fresh hand-off ("asked for you") apart from a reply after step-out
+// ("replied"). The two call sites each know their own trigger.
+export type PushoverReason = "asked" | "replied";
+
+const SNIPPET_MAX_LENGTH = 180;
+
+function buildPushoverTitle(displayName: string, reason: PushoverReason): string {
+    const verb = reason === "asked" ? "asked for you" : "replied";
+    return `Tandem — ${displayName} ${verb}`;
+}
+
+function buildPushoverSnippet(content: string): string | null {
+    const collapsed = content.replace(/\s+/g, " ").trim();
+    if (collapsed.length === 0) return null;
+    const truncated =
+        collapsed.length > SNIPPET_MAX_LENGTH
+            ? `${collapsed.slice(0, SNIPPET_MAX_LENGTH).trimEnd()}…`
+            : collapsed;
+    return `"${truncated}"`;
+}
 
 export type EffectsDeps = {
     db: Db;
@@ -31,6 +53,7 @@ export type Effects = {
     firePushoverIfNeeded(
         conversationId: string,
         sideEffects: { firePushover?: boolean },
+        reason: PushoverReason,
     ): Promise<void>;
     persistAndBroadcast(
         conversationId: string,
@@ -86,13 +109,41 @@ export function createEffects(deps: EffectsDeps): Effects {
     async function firePushoverIfNeeded(
         conversationId: string,
         sideEffects: { firePushover?: boolean },
+        reason: PushoverReason,
     ): Promise<void> {
         if (!sideEffects.firePushover) return;
         try {
+            const [convo] = await db
+                .select({ firstName: conversations.firstName, email: conversations.email })
+                .from(conversations)
+                .where(eq(conversations.id, conversationId));
+
+            const displayName =
+                visitorDisplayNameOrNull({
+                    firstName: convo?.firstName ?? null,
+                    email: convo?.email ?? null,
+                }) ?? "A visitor";
+
+            const [lastVisitorMessage] = await db
+                .select({ content: messages.content })
+                .from(messages)
+                .where(
+                    and(
+                        eq(messages.conversationId, conversationId),
+                        eq(messages.sender, "visitor"),
+                    ),
+                )
+                .orderBy(desc(messages.createdAt))
+                .limit(1);
+
+            const snippet = lastVisitorMessage
+                ? buildPushoverSnippet(lastVisitorMessage.content)
+                : null;
+
             await notifier.notify({
                 conversationId,
-                title: "Tandem — awaiting you",
-                message: "A visitor is waiting on your reply.",
+                title: buildPushoverTitle(displayName, reason),
+                message: snippet ?? "is waiting on your reply.",
                 threadUrl: buildThreadUrl(appBaseUrl, conversationId),
             });
         } catch (err) {

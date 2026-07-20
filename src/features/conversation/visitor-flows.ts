@@ -157,7 +157,7 @@ export function createVisitorFlows(
                 .set({ state: nextState })
                 .where(eq(conversations.id, conversationId));
             sse.publish(conversationId, { type: "state_changed", state: nextState });
-            await effects.firePushoverIfNeeded(conversationId, sideEffects);
+            await effects.firePushoverIfNeeded(conversationId, sideEffects, "replied");
             currentState = nextState;
         }
 
@@ -234,7 +234,7 @@ export function createVisitorFlows(
             },
         });
 
-        await effects.firePushoverIfNeeded(conversationId, sideEffects);
+        await effects.firePushoverIfNeeded(conversationId, sideEffects, "asked");
 
         return { conversationId };
     }

@@ -4,6 +4,17 @@ import { fullName, pronouns } from "@/config/site";
 
 export const REQUEST_HANDOFF_TOOL_NAME = "request_human_handoff";
 
+// Default twin model. Use the full `gpt-5.6-terra` id, never the bare `gpt-5.6`
+// alias — the alias routes to the pricier Sol. One model serves both the streamed
+// reply and draftFaq. Override per-deployment with OPENAI_TWIN_MODEL.
+const TWIN_MODEL = "gpt-5.6-terra";
+
+// Fast, non-reasoning effort, pinned explicitly rather than relying on the model's
+// implicit default (which OpenAI can change between snapshots, and which is the slow
+// medium tier on older models like gpt-5-mini). If the two-step escalation dance
+// flakes at "none", bump the streamed reply to "low" — the escape hatch from 4626a03.
+const TWIN_REASONING_EFFORT = "none" as const;
+
 export type TwinStreamEvent =
     | { type: "text_delta"; delta: string }
     | { type: "tool_call"; name: string };
@@ -97,10 +108,10 @@ export function createOpenAITwinAgent(): TwinAgent {
         async *stream({ transcript, doc, signal }) {
             const agent = new Agent({
                 name: "Tandem",
-                model: process.env.OPENAI_TWIN_MODEL || "gpt-5-mini",
+                model: process.env.OPENAI_TWIN_MODEL || TWIN_MODEL,
                 instructions: buildInstructions(doc),
                 tools: [requestHumanHandoff],
-                modelSettings: { reasoning: { effort: "low" } },
+                modelSettings: { reasoning: { effort: TWIN_REASONING_EFFORT } },
             });
             const result = await run(agent, transcript, { stream: true, signal });
             for await (const event of result) {
@@ -124,8 +135,9 @@ export function createOpenAITwinAgent(): TwinAgent {
         async draftFaq({ transcript, signal }) {
             const agent = new Agent({
                 name: "Tandem FAQ Drafter",
-                model: process.env.OPENAI_TWIN_MODEL || "gpt-5-mini",
+                model: process.env.OPENAI_TWIN_MODEL || TWIN_MODEL,
                 instructions: DRAFT_FAQ_INSTRUCTIONS,
+                modelSettings: { reasoning: { effort: TWIN_REASONING_EFFORT } },
                 outputType: DraftFaqOutput,
             });
             const result = await run(agent, transcript, { signal });
