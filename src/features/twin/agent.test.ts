@@ -127,6 +127,24 @@ describe("createOpenAITwinAgent", () => {
         expect(runOpts.stream).toBe(true);
     });
 
+    it("scopes the twin to questions about the human and out-of-scope requests to a no-tool decline", async () => {
+        // Regression: with any real doc the twin would (a) meta-describe itself when
+        // asked "tell me about yourself" and (b) write code / do generic-assistant
+        // tasks. The behavioural repro lives in scripts/twin-scope-probe.ts (hits the
+        // live model); this asserts the guarding instructions survive edits.
+        mockedRun.mockResolvedValue(makeStreamedResult([]) as never);
+
+        await collect(createOpenAITwinAgent().stream({ transcript: "Visitor: hi", doc: "d" }));
+
+        const config = mockedAgentCtor.mock.calls[0][0] as { instructions: string };
+        // "you"/"yourself" resolves to the human, not the twin's own role.
+        expect(config.instructions).toMatch(/"you" or "yourself".*mean/i);
+        expect(config.instructions).toMatch(/Never describe your own role/i);
+        // Out-of-scope requests (code, general knowledge) are declined without a tool call.
+        expect(config.instructions).toMatch(/writing code, general knowledge/i);
+        expect(config.instructions).toMatch(/Do NOT call any tool/i);
+    });
+
     it("identifies the represented human by the configured name and pronouns, not a hardcoded person", async () => {
         mockedRun.mockResolvedValue(makeStreamedResult([]) as never);
 
