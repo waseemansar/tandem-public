@@ -21,9 +21,24 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
+const description = "Ask anything. If the twin can't answer, a human steps in.";
+
 export const metadata: Metadata = {
+    metadataBase: new URL(process.env.APP_BASE_URL ?? "http://localhost:3000"),
     title: "Tandem",
-    description: "Tandem - your digital twin",
+    description,
+    openGraph: {
+        title: "Tandem",
+        description,
+        siteName: "Tandem",
+        type: "website",
+        url: "/",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Tandem",
+        description,
+    },
 };
 
 export default function RootLayout({
